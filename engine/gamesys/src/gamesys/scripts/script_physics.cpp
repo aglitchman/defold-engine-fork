@@ -50,17 +50,6 @@ namespace dmGameSystem
      * @namespace physics
      */
 
-    /*# spring joint type
-     *
-     * The following properties are available when connecting a joint of `JOINT_TYPE_SPRING` type:
-     * @param length [type:number] The natural length between the anchor points.
-     * @param frequency [type:number] The mass-spring-damper frequency in Hertz. A value of 0 disables softness.
-     * @param damping [type:number] The damping ratio. 0 = no damping, 1 = critical damping.
-     *
-     * @name physics.JOINT_TYPE_SPRING
-     * @variable
-     */
-
     /*# fixed joint type
      *
      * The following properties are available when connecting a joint of `JOINT_TYPE_FIXED` type:
@@ -106,6 +95,17 @@ namespace dmGameSystem
      * (Read only field, available from `physics.get_joint_properties()`)
      *
      * @name physics.JOINT_TYPE_SLIDER
+     * @variable
+     */
+
+    /*# spring joint type
+     *
+     * The following properties are available when connecting a joint of `JOINT_TYPE_SPRING` type:
+     * @param length [type:number] The natural length between the anchor points.
+     * @param frequency [type:number] The mass-spring-damper frequency in Hertz. A value of 0 disables softness.
+     * @param damping [type:number] The damping ratio. 0 = no damping, 1 = critical damping.
+     *
+     * @name physics.JOINT_TYPE_SPRING
      * @variable
      */
 
