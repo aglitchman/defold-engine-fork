@@ -78,6 +78,17 @@ namespace dmGameSystem
      * @variable
      */
 
+    /*# point joint type
+     *
+     * The following properties are available when connecting a joint of `JOINT_TYPE_POINT` type:
+     * @param max_force [type:number] The maximum constraint force that can be exerted to move the candidate body.
+     * @param frequency [type:number] The mass-spring-damper frequency in Hertz. Rotation only. Disable softness with a value of 0.
+     * @param damping [type:number] The damping ratio. 0 = no damping, 1 = critical damping.
+     *
+     * @name physics.JOINT_TYPE_POINT
+     * @variable
+     */
+
     /*# slider joint type
      *
      * The following properties are available when connecting a joint of `JOINT_TYPE_SLIDER` type:
@@ -620,6 +631,15 @@ namespace dmGameSystem
                 UnpackFloatParam(L, table_index, "damping", params.m_WeldJointParams.m_DampingRatio);
                 break;
 
+            case dmPhysics::JOINT_TYPE_POINT:
+                dmLogInfo("Unpacking JOINT_TYPE_POINT freq %.3f", params.m_PointJointParams.m_FrequencyHz);
+                UnpackVec3Param(L, table_index, "target", params.m_PointJointParams.m_Target);
+                UnpackFloatParam(L, table_index, "max_force", params.m_PointJointParams.m_MaxForce);
+                UnpackFloatParam(L, table_index, "frequency", params.m_PointJointParams.m_FrequencyHz);
+                UnpackFloatParam(L, table_index, "damping", params.m_PointJointParams.m_DampingRatio);
+                dmLogInfo(".. unpacked JOINT_TYPE_POINT freq %.3f", params.m_PointJointParams.m_FrequencyHz);
+                break;
+
             default:
                 DM_LUA_ERROR("property table not implemented for joint type %d", type)
                 return;
@@ -805,6 +825,17 @@ namespace dmGameSystem
                     lua_pushnumber(L, joint_params.m_WeldJointParams.m_ReferenceAngle); lua_setfield(L, -2, "reference_angle");
                     lua_pushnumber(L, joint_params.m_WeldJointParams.m_FrequencyHz); lua_setfield(L, -2, "frequency");
                     lua_pushnumber(L, joint_params.m_WeldJointParams.m_DampingRatio); lua_setfield(L, -2, "damping");
+                }
+                break;
+            case dmPhysics::JOINT_TYPE_POINT:
+                {
+                    dmLogInfo("Packing JOINT_TYPE_POINT, freq %.3f", joint_params.m_PointJointParams.m_FrequencyHz);
+                    Vectormath::Aos::Vector3 v(joint_params.m_PointJointParams.m_Target[0], joint_params.m_PointJointParams.m_Target[1], joint_params.m_PointJointParams.m_Target[2]);
+                    dmScript::PushVector3(L, v);
+                    lua_setfield(L, -2, "target");
+                    lua_pushnumber(L, joint_params.m_PointJointParams.m_MaxForce); lua_setfield(L, -2, "max_force");
+                    lua_pushnumber(L, joint_params.m_PointJointParams.m_FrequencyHz); lua_setfield(L, -2, "frequency");
+                    lua_pushnumber(L, joint_params.m_PointJointParams.m_DampingRatio); lua_setfield(L, -2, "damping");
                 }
                 break;
             default:
@@ -1120,6 +1151,7 @@ namespace dmGameSystem
         SETCONSTANT(JOINT_TYPE_HINGE)
         SETCONSTANT(JOINT_TYPE_SLIDER)
         SETCONSTANT(JOINT_TYPE_WELD)
+        SETCONSTANT(JOINT_TYPE_POINT)
 
  #undef SETCONSTANT
 

@@ -51,6 +51,8 @@ function init(self)
     physics.destroy_joint(self.a_coll, self.joint_id)
     physics.create_joint(physics.JOINT_TYPE_WELD, self.a_coll, self.joint_id, zp, self.b_coll, zp)
     physics.destroy_joint(self.a_coll, self.joint_id)
+    physics.create_joint(physics.JOINT_TYPE_POINT, self.a_coll, self.joint_id, zp, self.b_coll, zp)
+    physics.destroy_joint(self.a_coll, self.joint_id)
 
     -- Recreate with joint specific parameters + verify properties
     local properties = {}
@@ -81,6 +83,11 @@ function init(self)
     physics.create_joint(physics.JOINT_TYPE_WELD, self.a_coll, self.joint_id, zp, self.b_coll, zp, { reference_angle = 1 })
     properties = physics.get_joint_properties(self.a_coll, self.joint_id)
     assert(properties.reference_angle == 1)
+    physics.destroy_joint(self.a_coll, self.joint_id)
+
+    physics.create_joint(physics.JOINT_TYPE_POINT, self.a_coll, self.joint_id, zp, self.b_coll, zp, { max_force = 100, frequency = 5 })
+    properties = physics.get_joint_properties(self.a_coll, self.joint_id)
+    assert(properties.max_force == 100)
     physics.destroy_joint(self.a_coll, self.joint_id)
 end
 

@@ -43,6 +43,7 @@ namespace dmPhysics
         JOINT_TYPE_HINGE,
         JOINT_TYPE_SLIDER,
         JOINT_TYPE_WELD,
+        JOINT_TYPE_POINT,
         JOINT_TYPE_COUNT
     };
 
@@ -1249,6 +1250,14 @@ namespace dmPhysics
 
             struct
             {
+                float m_Target[3];
+                float m_MaxForce;
+                float m_FrequencyHz;
+                float m_DampingRatio;
+            } m_PointJointParams;
+
+            struct
+            {
                 float m_JointTranslation; // read only
                 float m_JointSpeed; // read only
                 float m_LocalAxisA[3];
@@ -1312,6 +1321,14 @@ namespace dmPhysics
                     m_WeldJointParams.m_ReferenceAngle = 0.0f;
                     m_WeldJointParams.m_FrequencyHz = 0.0f;
                     m_WeldJointParams.m_DampingRatio = 0.0f;
+                    break;
+                case JOINT_TYPE_POINT:
+                    m_PointJointParams.m_Target[0] = 0.0f;
+                    m_PointJointParams.m_Target[1] = 0.0f;
+                    m_PointJointParams.m_Target[2] = 0.0f;
+                    m_PointJointParams.m_MaxForce = 0.0f;
+                    m_PointJointParams.m_FrequencyHz = 0.0f;
+                    m_PointJointParams.m_DampingRatio = 0.0f;
                     break;
                 default:
                     break;
