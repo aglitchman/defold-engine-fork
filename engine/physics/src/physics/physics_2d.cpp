@@ -1369,17 +1369,15 @@ namespace dmPhysics
                 break;
             case dmPhysics::JOINT_TYPE_POINT:
                 {
-                    dmLogInfo("Creating b2MouseJointDef with target point %.3f, %.3f, freq %.3f", pa.x, pa.y, params.m_PointJointParams.m_FrequencyHz);
                     b2MouseJointDef jointDef;
-                    jointDef.bodyA            = b2_obj_a;
-                    jointDef.bodyB            = b2_obj_b;
-                    jointDef.target           = pa;
+                    jointDef.bodyA            = b2_obj_b;
+                    jointDef.bodyB            = b2_obj_a;
+                    jointDef.target           = b2Vec2(params.m_PointJointParams.m_Target[0] * scale, params.m_PointJointParams.m_Target[1] * scale);
                     jointDef.maxForce         = params.m_PointJointParams.m_MaxForce;
                     jointDef.frequencyHz      = params.m_PointJointParams.m_FrequencyHz;
                     jointDef.dampingRatio     = params.m_PointJointParams.m_DampingRatio;
                     jointDef.collideConnected = params.m_CollideConnected;
                     joint = world->m_World.CreateJoint(&jointDef);
-                    dmLogInfo("Created!");
                 }
                 break;
             default:
@@ -1438,9 +1436,6 @@ namespace dmPhysics
                 break;
             case dmPhysics::JOINT_TYPE_POINT:
                 {
-                    dmLogInfo("Setting b2MouseJointDef params, target %.3f, %.3f, freq %.3f", 
-                        params.m_PointJointParams.m_Target[0] * scale, params.m_PointJointParams.m_Target[1] * scale,
-                        params.m_PointJointParams.m_FrequencyHz);
                     b2MouseJoint* typed_joint = (b2MouseJoint*)joint;
                     typed_joint->SetTarget(b2Vec2(params.m_PointJointParams.m_Target[0] * scale, params.m_PointJointParams.m_Target[1] * scale));
                     typed_joint->SetMaxForce(params.m_PointJointParams.m_MaxForce);
@@ -1531,7 +1526,6 @@ namespace dmPhysics
                     b2MouseJoint* typed_joint = (b2MouseJoint*)joint;
 
                     b2Vec2 target = typed_joint->GetTarget();
-                    dmLogInfo("Setting m_PointJointParams params %.3f, %.3f, freq %.3f", target.x * inv_scale, target.y * inv_scale, typed_joint->GetFrequency());
                     params.m_PointJointParams.m_Target[0] = target.x * inv_scale;
                     params.m_PointJointParams.m_Target[1] = target.y * inv_scale;
                     params.m_PointJointParams.m_MaxForce = typed_joint->GetMaxForce();
