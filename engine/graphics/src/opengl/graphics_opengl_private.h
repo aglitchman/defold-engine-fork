@@ -29,20 +29,31 @@ namespace dmGraphics
         ATTACHMENT_TYPE_TEXTURE = 2,
     };
 
+    struct OpenGLTextureParamsState
+    {
+        bool          m_Initialized;
+        TextureFilter m_MinFilter;
+        TextureFilter m_MagFilter;
+        TextureWrap   m_UWrap;
+        TextureWrap   m_VWrap;
+        float         m_MaxAnisotropy;
+    };
+
     struct OpenGLTexture
     {
-        TextureType       m_Type;
-        GLuint*           m_TextureIds;
-        uint32_t          m_ResourceSize; // For Mip level 0. We approximate each mip level is 1/4th. Or MipSize0 * 1.33
-        uint16_t          m_NumTextureIds;
-        uint16_t          m_Width;
-        uint16_t          m_Height;
-        uint16_t          m_Depth;
-        uint16_t          m_OriginalWidth;
-        uint16_t          m_OriginalHeight;
-        uint16_t          m_MipMapCount;
-        volatile uint16_t m_DataState; // data state per mip-map (mipX = bitX). 0=ok, 1=pending
-        TextureParams     m_Params;
+        TextureType              m_Type;
+        GLuint*                  m_TextureIds;
+        uint32_t                 m_ResourceSize; // For Mip level 0. We approximate each mip level is 1/4th. Or MipSize0 * 1.33
+        uint16_t                 m_NumTextureIds;
+        uint16_t                 m_Width;
+        uint16_t                 m_Height;
+        uint16_t                 m_Depth;
+        uint16_t                 m_OriginalWidth;
+        uint16_t                 m_OriginalHeight;
+        uint16_t                 m_MipMapCount;
+        volatile uint16_t        m_DataState; // data state per mip-map (mipX = bitX). 0=ok, 1=pending
+        TextureParams            m_Params;
+        OpenGLTextureParamsState m_ParamsState;
     };
 
     struct OpenGLRenderTargetAttachment

@@ -1793,8 +1793,11 @@ static void LogFrameBufferError(GLenum status)
 
         for (uint32_t i=0; i<vertex_declaration->m_StreamCount; i++)
         {
-            glDisableVertexAttribArray(i);
-            CHECK_GL_ERROR;
+            if (vertex_declaration->m_Streams[i].m_PhysicalIndex != -1)
+            {
+                glDisableVertexAttribArray(vertex_declaration->m_Streams[i].m_PhysicalIndex);
+                CHECK_GL_ERROR;
+            }
         }
 
         glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
@@ -2869,6 +2872,8 @@ static void LogFrameBufferError(GLenum status)
         tex->m_DataState = 0;
         tex->m_ResourceSize = 0;
 
+        tex->m_ParamsState.m_Initialized = false;
+
         return StoreAssetInContainer(context->m_AssetHandleContainer, tex, ASSET_TYPE_TEXTURE);
     }
 
@@ -2976,26 +2981,46 @@ static void LogFrameBufferError(GLenum status)
     static void OpenGLSetTextureParams(HTexture texture, TextureFilter minfilter, TextureFilter magfilter, TextureWrap uwrap, TextureWrap vwrap, float max_anisotropy)
     {
         OpenGLTexture* tex = GetAssetFromContainer<OpenGLTexture>(g_Context->m_AssetHandleContainer, texture);
+        OpenGLTextureParamsState* state = &tex->m_ParamsState;
 
         GLenum type = GetOpenGLTextureType(tex->m_Type);
 
-        glTexParameteri(type, GL_TEXTURE_MIN_FILTER, GetOpenGLTextureFilter(minfilter));
-        CHECK_GL_ERROR;
+        if (!state->m_Initialized || state->m_MinFilter != minfilter) {
+            state->m_MinFilter = minfilter;
+            glTexParameteri(type, GL_TEXTURE_MIN_FILTER, GetOpenGLTextureFilter(minfilter));
+            CHECK_GL_ERROR;
+        }
 
-        glTexParameteri(type, GL_TEXTURE_MAG_FILTER, GetOpenGLTextureFilter(magfilter));
-        CHECK_GL_ERROR;
+        if (!state->m_Initialized || state->m_MagFilter != magfilter) {
+            state->m_MagFilter = magfilter;
+            glTexParameteri(type, GL_TEXTURE_MAG_FILTER, GetOpenGLTextureFilter(magfilter));
+            CHECK_GL_ERROR;
+        }
 
-        glTexParameteri(type, GL_TEXTURE_WRAP_S, GetOpenGLTextureWrap(uwrap));
-        CHECK_GL_ERROR
+        if (!state->m_Initialized || state->m_UWrap != uwrap) {
+            state->m_UWrap = uwrap;
+            glTexParameteri(type, GL_TEXTURE_WRAP_S, GetOpenGLTextureWrap(uwrap));
+            CHECK_GL_ERROR;
+        }
 
-        glTexParameteri(type, GL_TEXTURE_WRAP_T, GetOpenGLTextureWrap(vwrap));
-        CHECK_GL_ERROR
+        if (!state->m_Initialized || state->m_VWrap != vwrap) {
+            state->m_VWrap = vwrap;
+            glTexParameteri(type, GL_TEXTURE_WRAP_T, GetOpenGLTextureWrap(vwrap));
+            CHECK_GL_ERROR;
+        }
 
         if (g_Context->m_AnisotropySupport && max_anisotropy > 1.0f)
         {
-            glTexParameterf(type, GL_TEXTURE_MAX_ANISOTROPY_EXT, dmMath::Min(max_anisotropy, g_Context->m_MaxAnisotropy));
-            CHECK_GL_ERROR
+            float maxAnisotropy = dmMath::Min(max_anisotropy, g_Context->m_MaxAnisotropy);
+            if (!state->m_Initialized || state->m_MaxAnisotropy != maxAnisotropy)
+            {
+                state->m_MaxAnisotropy = maxAnisotropy;
+                glTexParameterf(type, GL_TEXTURE_MAX_ANISOTROPY_EXT, maxAnisotropy);
+                CHECK_GL_ERROR;
+            }
         }
+
+        state->m_Initialized = true;
     }
 
     static uint8_t OpenGLGetNumTextureHandles(HTexture texture)
@@ -3522,7 +3547,7 @@ static void LogFrameBufferError(GLenum status)
         glBindTexture(texture_type, tex->m_TextureIds[id_index]);
         CHECK_GL_ERROR;
 
-        OpenGLSetTextureParams(texture, tex->m_Params.m_MinFilter, tex->m_Params.m_MagFilter, tex->m_Params.m_UWrap, tex->m_Params.m_VWrap, 1.0f);
+        // OpenGLSetTextureParams(texture, tex->m_Params.m_MinFilter, tex->m_Params.m_MagFilter, tex->m_Params.m_UWrap, tex->m_Params.m_VWrap, 1.0f);
     }
 
     static void OpenGLDisableTexture(HContext context, uint32_t unit, HTexture texture)
