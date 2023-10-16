@@ -3495,6 +3495,36 @@ bail:
         return context.m_Result;
     }
 
+    // https://github.com/d954mas/defold-chronos/blob/master/chronos/src/extension.cpp
+    #if defined(__EMSCRIPTEN__)
+    #include <emscripten/emscripten.h>
+    static double nanotime()
+    {
+        return emscripten_get_now()/1000.0;
+    }
+    #elif defined(_WIN32)
+    static double nanotime()
+    {
+        // See http://msdn.microsoft.com/en-us/library/windows/desktop/dn553408(v=vs.85).aspx
+        LARGE_INTEGER timer;
+        LARGE_INTEGER freq;
+        static double multiplier;
+        static int init = 1;
+
+        /* Though bool, guaranteed to not return an error after WinXP,
+        and the alternatives have fairly crappy resolution.
+        However, if you're on XP, you've got bigger problems than timing.
+        */
+        (void) QueryPerformanceCounter(&timer);
+        if(init){
+            QueryPerformanceFrequency(&freq);
+            multiplier = 1.0 / (double)freq.QuadPart;
+            init = 0;
+        }
+        return timer.QuadPart * multiplier;
+    }
+    #endif
+
     RenderScriptResult UpdateRenderScriptInstance(HRenderScriptInstance instance, float dt)
     {
         DM_PROFILE("UpdateRSI");
@@ -3504,8 +3534,17 @@ bail:
 
         RenderScriptResult result = RunScript(instance, RENDER_SCRIPT_FUNCTION_UPDATE, (void*)&dt);
 
+        //
+        double start = nanotime();
+        //
         if (instance->m_CommandBuffer.Size() > 0)
             ParseCommands(instance->m_RenderContext, &instance->m_CommandBuffer.Front(), instance->m_CommandBuffer.Size());
+        //
+        double end = nanotime();
+        lua_State* L = instance->m_RenderContext->m_RenderScriptContext.m_LuaState;
+        lua_pushnumber(L, end - start);
+        lua_setglobal(L, "draw_time");
+        //
         return result;
     }
 
