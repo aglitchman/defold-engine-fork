@@ -2122,15 +2122,22 @@ static void LogFrameBufferError(GLenum status)
         return ShaderDesc::LANGUAGE_GLSL_SM140;
     }
 
-    static void OpenGLEnableProgram(HContext context, HProgram program)
+    static void OpenGLEnableProgram(HContext _context, HProgram _program)
     {
-        glUseProgram(((OpenGLProgram*) program)->m_Id);
+        OpenGLProgram* program = (OpenGLProgram*) _program;
+        glUseProgram(program->m_Id);
         CHECK_GL_ERROR;
+
+        OpenGLContext* context = (OpenGLContext*) _context;
+        context->m_ActiveProgram = program;
     }
 
-    static void OpenGLDisableProgram(HContext context)
+    static void OpenGLDisableProgram(HContext _context)
     {
         glUseProgram(0);
+
+        OpenGLContext* context = (OpenGLContext*) _context;
+        context->m_ActiveProgram = 0;
     }
 
     static bool TryLinkProgram(HVertexProgram vert_program, HFragmentProgram frag_program)
@@ -2269,12 +2276,48 @@ static void LogFrameBufferError(GLenum status)
 
     static void OpenGLSetConstantV4(HContext context, const Vector4* data, int count, int base_register)
     {
+        OpenGLProgram* program = (OpenGLProgram*) ((OpenGLContext*) context)->m_ActiveProgram;
+        if (program) {
+            dmArray<OpenGLConstantValue>& values = program->m_ConstantValues;
+            if (values.Size() < base_register + 1) {
+                values.SetCapacity(base_register + 1);
+                values.SetSize(base_register + 1);
+            }
+
+            OpenGLConstantValue& value = values[base_register];
+            if (value.m_ValueSet && memcmp(value.m_Value, data, 4 * sizeof(GLfloat)) == 0) {
+                return;
+            } else {
+                value.m_ValueSet = true;
+            }
+
+            memcpy(value.m_Value, data, 4 * sizeof(GLfloat));
+        }
+
         glUniform4fv(base_register, count, (const GLfloat*) data);
         CHECK_GL_ERROR;
     }
 
     static void OpenGLSetConstantM4(HContext context, const Vector4* data, int count, int base_register)
     {
+        OpenGLProgram* program = (OpenGLProgram*) ((OpenGLContext*) context)->m_ActiveProgram;
+        if (program) {
+            dmArray<OpenGLConstantValue>& values = program->m_ConstantValues;
+            if (values.Size() < base_register + 1) {
+                values.SetCapacity(base_register + 1);
+                values.SetSize(base_register + 1);
+            }
+
+            OpenGLConstantValue& value = values[base_register];
+            if (value.m_ValueSet && memcmp(value.m_Value, data, 16 * sizeof(GLfloat)) == 0) {
+                return;
+            } else {
+                value.m_ValueSet = true;
+            }
+
+            memcpy(value.m_Value, data, 16 * sizeof(GLfloat));
+        }
+
         glUniformMatrix4fv(base_register, count, 0, (const GLfloat*) data);
         CHECK_GL_ERROR;
     }
@@ -2282,6 +2325,25 @@ static void LogFrameBufferError(GLenum status)
     static void OpenGLSetSampler(HContext context, int32_t base_register, int32_t unit)
     {
         assert(context);
+
+        OpenGLProgram* program = (OpenGLProgram*) ((OpenGLContext*) context)->m_ActiveProgram;
+        if (program) {
+            dmArray<OpenGLConstantValue>& values = program->m_ConstantValues;
+            if (values.Size() < base_register + 1) {
+                values.SetCapacity(base_register + 1);
+                values.SetSize(base_register + 1);
+            }
+
+            OpenGLConstantValue& value = values[base_register];
+            if (value.m_ValueSet && memcmp(value.m_Value, &unit, 1 * sizeof(int32_t)) == 0) {
+                return;
+            } else {
+                value.m_ValueSet = true;
+            }
+
+            memcpy(value.m_Value, &unit, 1 * sizeof(int32_t));
+        }
+
         glUniform1i(base_register, unit);
         CHECK_GL_ERROR;
     }
