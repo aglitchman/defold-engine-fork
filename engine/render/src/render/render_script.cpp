@@ -3532,18 +3532,22 @@ bail:
 
         dmScript::UpdateScriptWorld(instance->m_ScriptWorld, dt);
 
+        //
+        double time = dmGraphics::GetTimerValue();
+        lua_State* L = instance->m_RenderContext->m_RenderScriptContext.m_LuaState;
+        lua_pushnumber(L, time);
+        lua_setglobal(L, "draw_time");
+        //
+
         RenderScriptResult result = RunScript(instance, RENDER_SCRIPT_FUNCTION_UPDATE, (void*)&dt);
 
         //
-        double start = nanotime();
+        // dmGraphics::StartTimer();
         //
         if (instance->m_CommandBuffer.Size() > 0)
             ParseCommands(instance->m_RenderContext, &instance->m_CommandBuffer.Front(), instance->m_CommandBuffer.Size());
         //
-        double end = nanotime();
-        lua_State* L = instance->m_RenderContext->m_RenderScriptContext.m_LuaState;
-        lua_pushnumber(L, end - start);
-        lua_setglobal(L, "draw_time");
+        // dmGraphics::EndTimer();
         //
         return result;
     }

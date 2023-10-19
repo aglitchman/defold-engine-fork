@@ -718,6 +718,10 @@ namespace dmGraphics
     void ReadPixels(HContext context, void* buffer, uint32_t buffer_size);
 
     uint32_t GetTypeSize(dmGraphics::Type type);
+
+    //
+    double GetTimerValue();
+    //
 }
 
 #endif // DM_GRAPHICS_H

@@ -3798,4 +3798,8 @@ bail:
         DM_REGISTER_GRAPHICS_FUNCTION_TABLE(fn_table, Vulkan);
         return fn_table;
     }
+
+    //
+    double GetTimerValue() { return 0; }
+    //
 }

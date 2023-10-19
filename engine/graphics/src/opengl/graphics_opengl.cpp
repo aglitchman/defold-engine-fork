@@ -154,6 +154,26 @@
         PFNGLGETFRAGDATALOCATIONPROC glGetFragDataLocation = NULL;
         PFNGLBINDFRAGDATALOCATIONPROC glBindFragDataLocation = NULL;
     #endif
+
+    //
+    typedef void (APIENTRYP PFNGLGENQUERIESPROC) (GLsizei n, GLuint *ids);
+    typedef void (APIENTRYP PFNGLDELETEQUERIESPROC) (GLsizei n, const GLuint *ids);
+    typedef GLboolean (APIENTRYP PFNGLISQUERYPROC) (GLuint id);
+    typedef void (APIENTRYP PFNGLBEGINQUERYPROC) (GLenum target, GLuint id);
+    typedef void (APIENTRYP PFNGLENDQUERYPROC) (GLenum target);
+    typedef void (APIENTRYP PFNGLQUERYCOUNTERPROC) (GLuint id, GLenum target);
+    typedef void (APIENTRYP PFNGLGETQUERYOBJECTI64VPROC) (GLuint id, GLenum pname, GLint64 *params);
+    typedef void (APIENTRYP PFNGLGETQUERYOBJECTUI64VPROC) (GLuint id, GLenum pname, GLuint64 *params);
+    PFNGLGENQUERIESPROC glGenQueries = NULL;
+    PFNGLDELETEQUERIESPROC glDeleteQueries = NULL;
+    PFNGLISQUERYPROC glIsQuery = NULL;
+    PFNGLBEGINQUERYPROC glBeginQuery = NULL;
+    PFNGLENDQUERYPROC glEndQuery = NULL;
+    PFNGLQUERYCOUNTERPROC glQueryCounter = NULL;
+    PFNGLGETQUERYOBJECTI64VPROC glGetQueryObjecti64v = NULL;
+    PFNGLGETQUERYOBJECTUI64VPROC glGetQueryObjectui64v = NULL;
+    
+    //
 #elif defined(__EMSCRIPTEN__)
     #include <GL/glext.h>
     #if defined GL_ES_VERSION_2_0
@@ -352,6 +372,12 @@ static void LogFrameBufferError(GLenum status)
     static bool                         OpenGLIsSupported();
     static int8_t          g_null_adapter_priority = 1;
     static GraphicsAdapter g_opengl_adapter("opengl");
+
+    //
+    static GLuint timerQuery = 0;
+    static int queryState = 0;
+    static GLuint64 elapsedTime;
+    //
 
     DM_REGISTER_GRAPHICS_ADAPTER(GraphicsAdapterOpenGL, &g_opengl_adapter, OpenGLIsSupported, OpenGLRegisterFunctionTable, g_null_adapter_priority);
 
@@ -931,6 +957,25 @@ static void LogFrameBufferError(GLenum status)
         GET_PROC_ADDRESS(glBindFragDataLocation, "glBindFragDataLocation", PFNGLBINDFRAGDATALOCATIONPROC);
 #endif
 
+        //
+        GET_PROC_ADDRESS(glGenQueries,"glGenQueries",PFNGLGENQUERIESPROC);
+        GET_PROC_ADDRESS(glDeleteQueries, "glDeleteQueries", PFNGLDELETEQUERIESPROC);
+        GET_PROC_ADDRESS(glIsQuery, "glIsQuery", PFNGLISQUERYPROC);
+        GET_PROC_ADDRESS(glBeginQuery, "glBeginQuery", PFNGLBEGINQUERYPROC);
+        GET_PROC_ADDRESS(glEndQuery, "glEndQuery", PFNGLENDQUERYPROC);
+        GET_PROC_ADDRESS(glQueryCounter, "glQueryCounter", PFNGLQUERYCOUNTERPROC);
+        GET_PROC_ADDRESS(glGetQueryObjecti64v, "glGetQueryObjecti64v", PFNGLGETQUERYOBJECTI64VPROC);
+        GET_PROC_ADDRESS(glGetQueryObjectui64v, "glGetQueryObjectui64v", PFNGLGETQUERYOBJECTUI64VPROC);
+        dmLogInfo("glGenQueries - %d", glGenQueries != NULL ? 1 : 0);
+        dmLogInfo("glDeleteQueries - %d", glDeleteQueries != NULL ? 1 : 0);
+        dmLogInfo("glIsQuery - %d", glIsQuery != NULL ? 1 : 0);
+        dmLogInfo("glBeginQuery - %d", glBeginQuery != NULL ? 1 : 0);
+        dmLogInfo("glEndQuery - %d", glEndQuery != NULL ? 1 : 0);
+        dmLogInfo("glQueryCounter - %d", glQueryCounter != NULL ? 1 : 0);
+        dmLogInfo("glGetQueryObjecti64v - %d", glGetQueryObjecti64v != NULL ? 1 : 0);
+        dmLogInfo("glGetQueryObjectui64v - %d", glGetQueryObjectui64v != NULL ? 1 : 0);
+        //
+
 #undef GET_PROC_ADDRESS
 #endif
 
@@ -1323,6 +1368,12 @@ static void LogFrameBufferError(GLenum status)
         }
 #endif
 
+        //
+        glGenQueries(1, &timerQuery);
+        CHECK_GL_ERROR;
+        queryState = 0;
+        //
+
         return WINDOW_RESULT_OK;
     }
 
@@ -1496,6 +1547,30 @@ static void LogFrameBufferError(GLenum status)
 
     static void OpenGLBeginFrame(HContext context)
     {
+        if (queryState == 2) {
+            GLuint64 isAvailable = 0;
+            while (!isAvailable)
+            {
+                glGetQueryObjectui64v(timerQuery, GL_QUERY_RESULT_AVAILABLE, &isAvailable);
+                CHECK_GL_ERROR;
+            }
+            // if (isAvailable) {
+                glGetQueryObjectui64v(timerQuery, GL_QUERY_RESULT, &elapsedTime);
+                CHECK_GL_ERROR;
+                // dmLogInfo("VALUE %.03f ms", (double)(elapsedTime / 1000L) / 1000.0);
+                queryState = 0;
+            // } else {
+            //     elapsedTime = 0;
+            //     // dmLogInfo("NOT AVAIL");
+            // }
+        }
+
+        if (queryState == 0) {
+            glBeginQuery(GL_TIME_ELAPSED, timerQuery);
+            CHECK_GL_ERROR;
+            queryState = 1;
+        }
+
 #if defined(ANDROID)
         glfwAndroidBeginFrame();
 #endif
@@ -1503,11 +1578,24 @@ static void LogFrameBufferError(GLenum status)
 
     static void OpenGLFlip(HContext context)
     {
+        if (queryState == 1) {
+            glEndQuery(GL_TIME_ELAPSED);
+            CHECK_GL_ERROR;
+            queryState = 2;
+        }
+
         DM_PROFILE(__FUNCTION__);
         PostDeleteTextures(false);
         glfwSwapBuffers();
         CHECK_GL_ERROR;
     }
+
+    //
+    double GetTimerValue()
+    {
+        return (double)(elapsedTime / 1000L) / 1000000.0;
+    }
+    //
 
     static void OpenGLSetSwapInterval(HContext context, uint32_t swap_interval)
     {

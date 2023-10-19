@@ -1649,5 +1649,9 @@ namespace dmGraphics
         DM_REGISTER_GRAPHICS_FUNCTION_TABLE(fn_table, Null);
         return fn_table;
     }
+
+    //
+    double GetTimerValue() { return 0; }
+    //
 }
 
