@@ -379,6 +379,12 @@ function cmi_setup_cc() {
             export CPPFLAGS="${CPPFLAGS} -fPIC"
             ;;
 
+        arm64-linux)
+            export CFLAGS="${CFLAGS} -fPIC"
+            export CXXFLAGS="${CXXFLAGS} -fPIC"
+            export CPPFLAGS="${CPPFLAGS} -fPIC"
+            ;;
+
         win32)
             ;;
 
@@ -442,7 +448,7 @@ function cmi() {
             ;;
 
         # desktop
-        x86_64-macos|arm64-macos|x86_64-linux|win32|x86_64-win32)
+        x86_64-macos|arm64-macos|x86_64-linux|arm64-linux|win32|x86_64-win32)
             cmi_buildplatform $1
             ;;
 

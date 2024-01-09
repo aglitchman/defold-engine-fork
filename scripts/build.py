@@ -35,7 +35,7 @@ from threading import Thread, Event
 from queue import Queue
 from configparser import ConfigParser
 
-BASE_PLATFORMS = [  'x86_64-linux',
+BASE_PLATFORMS = [  'x86_64-linux', 'arm64-linux',
                     'x86_64-macos', 'arm64-macos',
                     'win32', 'x86_64-win32',
                     'x86_64-ios', 'arm64-ios',
@@ -457,6 +457,7 @@ class Configuration(object):
             'win32':          PACKAGES_WIN32,
             'x86_64-win32':   PACKAGES_WIN32_64,
             'x86_64-linux':   PACKAGES_LINUX_64,
+            'arm64-linux':    PACKAGES_LINUX_64,
             'x86_64-macos':   PACKAGES_MACOS_X86_64,
             'arm64-macos':    PACKAGES_MACOS_ARM64,
             'arm64-ios':      PACKAGES_IOS_64,
@@ -1177,6 +1178,7 @@ class Configuration(object):
         for plf in [['win32', 'x86_64-win32'],
                     ['x86_64-win32', 'x86_64-win32'],
                     ['x86_64-linux', 'x86_64-linux'],
+                    ['arm64-linux', 'arm64-linux'],
                     ['x86_64-macos', 'x86_64-macos'],
                     ['arm64-macos', 'arm64-macos']]:
             luajit_path = join(cwd, '../../packages/luajit-2.1.0-6c4826f-%s.tar.gz' % (plf[0]))
@@ -1193,7 +1195,7 @@ class Configuration(object):
 
         win32_files = dict([['ext/lib/%s/%s.dll' % (plf[0], lib), 'lib/%s/%s.dll' % (plf[1], lib)] for lib in ['OpenAL32', 'wrap_oal'] for plf in [['win32', 'x86-win32'], ['x86_64-win32', 'x86_64-win32']]])
         macos_files = dict([['ext/lib/%s/lib%s.dylib' % (plf[0], lib), 'lib/%s/lib%s.dylib' % (plf[1], lib)] for lib in [] for plf in [['x86_64-macos', 'x86_64-macos'], ['arm64-macos', 'arm64-macos']]])
-        linux_files = dict([['ext/lib/%s/lib%s.so' % (plf[0], lib), 'lib/%s/lib%s.so' % (plf[1], lib)] for lib in [] for plf in [['x86_64-linux', 'x86_64-linux']]])
+        linux_files = dict([['ext/lib/%s/lib%s.so' % (plf[0], lib), 'lib/%s/lib%s.so' % (plf[1], lib)] for lib in [] for plf in [['x86_64-linux', 'x86_64-linux'], ['arm64-linux', 'arm64-linux']]])
         js_files = {}
         android_files = {'share/java/classes.dex': 'lib/classes.dex',
                          'ext/share/java/android.jar': 'lib/android.jar'}
@@ -1219,7 +1221,7 @@ class Configuration(object):
                            'js-bundling': [['js-web', 'js-web'], ['wasm-web', 'wasm-web']],
                            'ios-bundling': [['arm64-ios', 'arm64-ios'], ['x86_64-ios', 'x86_64-ios']],
                            'osx-bundling': [['x86_64-macos', 'x86_64-macos'], ['arm64-macos', 'arm64-macos']],
-                           'linux-bundling': [['x86_64-linux', 'x86_64-linux']],
+                           'linux-bundling': [['x86_64-linux', 'x86_64-linux'], ['arm64-linux', 'arm64-linux']],
                            'switch-bundling': [['arm64-nx64', 'arm64-nx64']]}.items():
             # plfs is pairs of src-platform -> dst-platform
             for plf in plfs:
