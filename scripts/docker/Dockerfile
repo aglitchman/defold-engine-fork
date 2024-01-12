@@ -3,13 +3,10 @@ FROM ubuntu:20.04
 # Base stuff
 RUN \
   apt-get update && \
-  apt-get install -y software-properties-common && \
-  add-apt-repository ppa:openjdk-r/ppa && \
-  apt-get update && \
-  apt-get install -y openjdk-11-jdk
+  apt-get install -y --no-install-recommends \
+    openjdk-17-jdk-headless
 
 RUN \
-  apt-get update && \
   apt-get install -y --no-install-recommends \
     gcc \
     g++ \
@@ -25,11 +22,12 @@ RUN \
     libgl1-mesa-dev \
     libglw1-mesa-dev \
     freeglut3-dev \
-    gcc-multilib \
-    g++-multilib \
+    # for clang-13.0.0
+    libncurses5 \
     # for python+ctypes
-    libffi-dev
-
+    libffi-dev \
+    # vpx
+    nasm
 
 RUN \
   apt-get install -y --no-install-recommends \
@@ -42,6 +40,20 @@ RUN \
     tree \
     silversearcher-ag \
     git
+
+RUN dpkg --add-architecture arm64 && sed -i -E 's/^deb /deb [arch=amd64] /' /etc/apt/sources.list && \
+  echo "deb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports focal main restricted universe multiverse" >> /etc/apt/sources.list && \
+  echo "deb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports focal-updates main restricted universe multiverse" >> /etc/apt/sources.list && \
+  echo "deb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports focal-security main restricted universe multiverse" >> /etc/apt/sources.list
+
+RUN cat /etc/apt/sources.list
+
+RUN apt-get -y update && \
+  apt-get -y install --no-install-recommends \
+    g++-aarch64-linux-gnu \
+    gcc-aarch64-linux-gnu \
+    libxi-dev:arm64 \
+    libopenal-dev:arm64
 
 #
 # llvm
@@ -76,7 +88,7 @@ RUN apt-get autoremove
 ENV LC_ALL C.UTF-8
 
 # Add builder user
-RUN  useradd -r -u 2222 builder && \
+RUN  useradd -r -u 1000 builder && \
   mkdir -p /var/builder && \
   chown builder: /var/builder && \
   chown builder: $(readlink -f /usr/bin/java) && \

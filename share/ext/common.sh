@@ -47,6 +47,9 @@ if [ "Darwin" == "$(uname)" ]; then
     fi
 fi
 
+LINUX_CLANG_VERSION=13.0.0
+LINUX_TOOLCHAIN_ROOT=${DYNAMO_HOME}/ext/SDKs/linux/clang-${LINUX_CLANG_VERSION}
+
 ANDROID_NDK_VERSION=25b
 ANDROID_NDK_ROOT=${DYNAMO_HOME}/ext/SDKs/android-ndk-r${ANDROID_NDK_VERSION}
 
@@ -380,9 +383,23 @@ function cmi_setup_cc() {
             ;;
 
         arm64-linux)
-            export CFLAGS="${CFLAGS} -fPIC"
-            export CXXFLAGS="${CXXFLAGS} -fPIC"
-            export CPPFLAGS="${CPPFLAGS} -fPIC"
+            export CPP="${LINUX_TOOLCHAIN_ROOT}/bin/clang -E"
+            export CC="${LINUX_TOOLCHAIN_ROOT}/bin/clang"
+            export CXX="${LINUX_TOOLCHAIN_ROOT}/bin/clang++"
+
+            export AR="aarch64-linux-gnu-ar"
+            export AS="aarch64-linux-gnu-as"
+            export LD="aarch64-linux-gnu-ld"
+            export RANLIB="aarch64-linux-gnu-ranlib"
+
+            # export AR="${LINUX_TOOLCHAIN_ROOT}/bin/llvm-ar"
+            # export AS="${LINUX_TOOLCHAIN_ROOT}/bin/llvm-as"
+            # export LD="${LINUX_TOOLCHAIN_ROOT}/bin/lld"
+            # export RANLIB="${LINUX_TOOLCHAIN_ROOT}/bin/llvm-ranlib"
+
+            export CFLAGS="${CFLAGS} --target=aarch64-linux-gnu -fPIC"
+            export CXXFLAGS="${CXXFLAGS} --target=aarch64-linux-gnu -fPIC"
+            export CPPFLAGS="${CPPFLAGS} --target=aarch64-linux-gnu -fPIC"
             ;;
 
         win32)
