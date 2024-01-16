@@ -44,7 +44,7 @@ RUN \
 RUN wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null | gpg --dearmor - | tee /etc/apt/trusted.gpg.d/kitware.gpg >/dev/null
 RUN apt-add-repository 'deb https://apt.kitware.com/ubuntu/ focal main' && \
   apt update && \
-  apt install cmake
+  apt install -y cmake
 
 #
 # llvm
@@ -77,6 +77,9 @@ RUN apt-get -y update && \
     libxi-dev:arm64 \
     libopenal-dev:arm64
 
+# Use qemu to test arm64 binaries
+# qemu-aarch64 -L /usr/aarch64-linux-gnu <filename>
+RUN apt-get install -y qemu-user qemu-user-static
 
 
 ENV PYENV_ROOT /.pyenv

@@ -87,6 +87,14 @@ function luajit_configure() {
 			export TARGET_FLAGS="$CFLAGS"
 			export XCFLAGS="-DLUAJIT_TARGET=LUAJIT_ARCH_ARM64 ${COMMON_XCFLAGS}"
 			;;
+		arm64-linux)
+			export CROSS=""
+			export HOST_CC="clang"
+			export HOST_CFLAGS="$XFLAGS -m64 -I."
+			export HOST_ALDFLAGS="-m64"
+			export TARGET_FLAGS="$CFLAGS"
+			export XCFLAGS="-DLUAJIT_TARGET=LUAJIT_ARCH_ARM64 ${COMMON_XCFLAGS}"
+			;;
 		*)
 			return
 			;;
