@@ -8,6 +8,8 @@
 /share/ext/tremolo/tmp/
 /share/ext/protobuf/tmp/
 /share/ext/protobuf/cross_tmp/
+/share/ext/spirv-tools/build/
+/share/ext/vpx/tmp/
 /share/extender/build
 /go/pkg
 /go/bin
