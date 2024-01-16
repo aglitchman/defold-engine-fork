@@ -32,7 +32,6 @@ RUN \
 RUN \
   apt-get install -y --no-install-recommends \
     tofrodos \
-    cmake \
     wget \
     curl \
     zip \
@@ -41,19 +40,11 @@ RUN \
     silversearcher-ag \
     git
 
-RUN dpkg --add-architecture arm64 && sed -i -E 's/^deb /deb [arch=amd64] /' /etc/apt/sources.list && \
-  echo "deb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports focal main restricted universe multiverse" >> /etc/apt/sources.list && \
-  echo "deb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports focal-updates main restricted universe multiverse" >> /etc/apt/sources.list && \
-  echo "deb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports focal-security main restricted universe multiverse" >> /etc/apt/sources.list
-
-RUN cat /etc/apt/sources.list
-
-RUN apt-get -y update && \
-  apt-get -y install --no-install-recommends \
-    g++-aarch64-linux-gnu \
-    gcc-aarch64-linux-gnu \
-    libxi-dev:arm64 \
-    libopenal-dev:arm64
+# Install latest CMake: spirv-tools requires cmake 3.17.2+
+RUN wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null | gpg --dearmor - | tee /etc/apt/trusted.gpg.d/kitware.gpg >/dev/null
+RUN apt-add-repository 'deb https://apt.kitware.com/ubuntu/ focal main' && \
+  apt update && \
+  apt install cmake
 
 #
 # llvm
@@ -68,6 +59,25 @@ RUN \
 
 ENV PATH=/usr/lib/llvm-${CLANG_VERSION}/bin:$PATH
 ENV LD_LIBRARY_PATH=/usr/lib/llvm-${CLANG_VERSION}/lib:$LD_LIBRARY_PATH
+
+#
+# Add ARM64 architecture
+#
+RUN dpkg --add-architecture arm64 && sed -i -E 's/^deb /deb [arch=amd64] /' /etc/apt/sources.list && \
+  echo "deb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports focal main restricted universe multiverse" >> /etc/apt/sources.list && \
+  echo "deb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports focal-updates main restricted universe multiverse" >> /etc/apt/sources.list && \
+  echo "deb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports focal-security main restricted universe multiverse" >> /etc/apt/sources.list
+
+RUN cat /etc/apt/sources.list
+
+RUN apt-get -y update && \
+  apt-get -y install --no-install-recommends \
+    g++-aarch64-linux-gnu \
+    gcc-aarch64-linux-gnu \
+    libxi-dev:arm64 \
+    libopenal-dev:arm64
+
+
 
 ENV PYENV_ROOT /.pyenv
 ENV PATH $PYENV_ROOT/shims:$PYENV_ROOT/bin:$PATH
