@@ -383,23 +383,19 @@ function cmi_setup_cc() {
             ;;
 
         arm64-linux)
-            export CPP="${LINUX_TOOLCHAIN_ROOT}/bin/clang -E"
-            export CC="${LINUX_TOOLCHAIN_ROOT}/bin/clang"
-            export CXX="${LINUX_TOOLCHAIN_ROOT}/bin/clang++"
+            export CPP="${LINUX_TOOLCHAIN_ROOT}/bin/clang -E --target=aarch64-linux-gnu"
+            export CC="${LINUX_TOOLCHAIN_ROOT}/bin/clang --target=aarch64-linux-gnu"
+            export CXX="${LINUX_TOOLCHAIN_ROOT}/bin/clang++ --target=aarch64-linux-gnu"
 
             export AR="aarch64-linux-gnu-ar"
             export AS="aarch64-linux-gnu-as"
             export LD="aarch64-linux-gnu-ld"
             export RANLIB="aarch64-linux-gnu-ranlib"
+            export STRIP="aarch64-linux-gnu-strip"
 
-            # export AR="${LINUX_TOOLCHAIN_ROOT}/bin/llvm-ar"
-            # export AS="${LINUX_TOOLCHAIN_ROOT}/bin/llvm-as"
-            # export LD="${LINUX_TOOLCHAIN_ROOT}/bin/lld"
-            # export RANLIB="${LINUX_TOOLCHAIN_ROOT}/bin/llvm-ranlib"
-
-            export CFLAGS="${CFLAGS} --target=aarch64-linux-gnu -fPIC"
-            export CXXFLAGS="${CXXFLAGS} --target=aarch64-linux-gnu -fPIC"
-            export CPPFLAGS="${CPPFLAGS} --target=aarch64-linux-gnu -fPIC"
+            export CFLAGS="${CFLAGS} -fPIC"
+            export CXXFLAGS="${CXXFLAGS} -fPIC"
+            export CPPFLAGS="${CPPFLAGS} -fPIC"
             ;;
 
         win32)

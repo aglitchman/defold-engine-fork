@@ -26,7 +26,7 @@ RUN \
     libncurses5 \
     # for python+ctypes
     libffi-dev \
-    # vpx
+    # for vpx
     nasm
 
 RUN \

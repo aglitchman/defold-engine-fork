@@ -102,6 +102,9 @@ case $CONF_TARGET in
 	linux)
 		CONFIGURE_ARGS="${CONFIGURE_ARGS} --target=x86-linux-gcc"
 		;;
+	arm64-linux)
+		CONFIGURE_ARGS="${CONFIGURE_ARGS} --target=arm64-linux-gcc"
+		;;
 	win32)
 		CONFIGURE_ARGS="${CONFIGURE_ARGS} --target=x86-win32-vs14 --enable-static-msvcrt"
 		# If used, it will build via command line, although with the /GL flag which we don't support when using lld-link
