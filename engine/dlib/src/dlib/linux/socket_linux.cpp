@@ -44,9 +44,12 @@ namespace dmSocket
         ifc.ifc_ifcu.ifcu_req = ifr;
         ifc.ifc_len = sizeof(buf);
         if (ioctl(s, SIOCGIFCONF, &ifc) < 0) {
+            dmLogInfo("<!> Unable to get interface addresses");
             close(s);
             return;
         }
+
+        dmLogInfo("<!> Got interface addresses");
 
         // NOTE: This is not compatible with BSD. You can't assume
         // equivalent size for all items
@@ -55,6 +58,7 @@ namespace dmSocket
             struct ifreq *r = &ifr[i];
 
             if (strcmp(r->ifr_name, "lo") == 0) {
+                dmLogInfo("<!> Skipping loopback interface");
                 continue;
             }
 
@@ -63,8 +67,10 @@ namespace dmSocket
 
             dmStrlCpy(a->m_Name, r->ifr_name, sizeof(a->m_Name));
 
-            if(ioctl(s, SIOCGIFADDR, r) < 0)
+            if(ioctl(s, SIOCGIFADDR, r) < 0) {
+                dmLogInfo("<!> Unable to get interface address");
                 continue;
+            }
 
             if (r->ifr_addr.sa_family == AF_INET)
             {
@@ -80,6 +86,10 @@ namespace dmSocket
                 a->m_Address.m_family = DOMAIN_IPV6;
                 memcpy(IPv6(&a->m_Address), &ia->sin6_addr, sizeof(struct in6_addr));
             }
+            else
+            {
+                dmLogInfo("<!> Unsupported address family %d", r->ifr_addr.sa_family);
+            }
 
             if(ioctl(s, SIOCGIFHWADDR, r) >= 0)
             {
@@ -91,9 +101,11 @@ namespace dmSocket
                 memset(a->m_MacAddress, 0x00, sizeof(unsigned char) * 6);
             }
 
-            if(ioctl(s, SIOCGIFFLAGS, r) < 0)
+            if(ioctl(s, SIOCGIFFLAGS, r) < 0) {
+                dmLogInfo("<!> Unable to get interface flags");
                 continue;
-            
+            }
+
             if (r->ifr_ifru.ifru_flags & IFF_UP) {
                 a->m_Flags |= FLAGS_UP;
             }
@@ -103,6 +115,8 @@ namespace dmSocket
 
             *count = *count + 1;
         }
+
+        dmLogInfo("<!> Got %d interface addresses", *count);
 
         close(s);
         return;

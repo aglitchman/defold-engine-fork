@@ -1449,6 +1449,10 @@ def run_tests(ctx, valgrind = False, configfile = None):
             if 'web' in ctx.env.PLATFORM: # should be moved to TEST_LAUNCH_ARGS
                 cmd = '%s %s' % (ctx.env['NODEJS'][0], cmd)
 
+            if ctx.env.PLATFORM != ctx.env.BUILD_PLATFORM and 'arm64-linux' in ctx.env.PLATFORM:
+                cmd = '%s %s' % (ctx.env['QEMU_AARCH64'], cmd)
+                env['QEMU_RUNNER'] = '1'
+
         # disable shortly during beta release, due to issue with jctest + test_gui
         valgrind = False
         if valgrind:
@@ -1730,6 +1734,15 @@ def detect(conf):
             conf.env.CXX = "clang++"
             conf.env.CC = "clang"
             conf.env.CPP = "clang -E"
+
+        if platform == 'arm64-linux' and platform != host_platform and not Options.options.skip_tests:
+            # We use qemu to run tests on non-arm64 platforms
+            if not conf.env['QEMU_AARCH64']:
+                conf.find_program('qemu-aarch64-static', var='QEMU_AARCH64', mandatory = False)
+                if not conf.env['QEMU_AARCH64']:
+                    conf.find_program('qemu-aarch64', var='QEMU_AARCH64', mandatory = True)
+                if conf.env['QEMU_AARCH64']:
+                    conf.env['QEMU_AARCH64'] = conf.env['QEMU_AARCH64'][0]
 
     platform_setup_tools(conf, build_util)
 

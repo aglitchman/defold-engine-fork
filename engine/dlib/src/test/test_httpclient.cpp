@@ -541,6 +541,7 @@ TEST_P(dmHttpClientTest, NoKeepAlive)
 
     for (int i = 0; i < NUM_ITERATIONS; ++i)
     {
+        dmLogInfo("<!> TESTING NO-KEEP-ALIVE %d / %d", i, NUM_ITERATIONS);
         m_Content = "";
         dmSnPrintf(buf, sizeof(buf), "/no-keep-alive");
         dmHttpClient::Result r;
@@ -593,14 +594,21 @@ TEST_P(dmHttpClientTest, ClientTimeout)
     // We also want to keep the unit tests below a certain amount of seconds, so we also decrease the number of iterations in this loop.
 
     int sleep_time_ms = 5 * 1000;
+    int timeout_us = 500 * 1000;
+
     #if defined(DM_PLATFORM_VENDOR) || defined (DM_SANITIZE_THREAD)
-        const int timeout_us = 5000 * 1000;
         sleep_time_ms = 50 * 1000;
+        timeout_us = 5000 * 1000;
     #elif defined(__SCE__)
-        const int timeout_us = 1000 * 1000;
-    #else
-        const int timeout_us = 500 * 1000;
+        timeout_us = 1000 * 1000;
     #endif
+
+    if (dmSys::GetEnv("QEMU_RUNNER"))
+    {
+        dmLogInfo("<!> QEMU_RUNNER detected, increasing timeout to 5000ms");
+        sleep_time_ms = 50 * 1000;
+        timeout_us = 5000 * 1000;
+    }
 
     dmHttpClient::SetOptionInt(m_Client, dmHttpClient::OPTION_REQUEST_TIMEOUT, timeout_us); // microseconds
 
@@ -779,6 +787,25 @@ TEST_P(dmHttpClientTest, Test404)
     }
 }
 
+static std::string string_to_hex(const std::string& input)
+{
+    static const char hex_digits[] = "0123456789ABCDEF";
+
+    std::string output;
+    output.reserve(input.length() * 5);
+    output.push_back('{');
+    for (unsigned char c : input)
+    {
+        output.push_back('0');
+        output.push_back('x');
+        output.push_back(hex_digits[c >> 4]);
+        output.push_back(hex_digits[c & 15]);
+        output.push_back('+');
+    }
+    output.push_back('}');
+    return output;
+}
+
 TEST_P(dmHttpClientTest, Post)
 {
     for (int i = 0; i < 27; ++i)
@@ -788,15 +815,19 @@ TEST_P(dmHttpClientTest, Post)
         m_ToPost = "";
 
         for (int j = 0; j < n; ++j) {
-            char buf[2] = { (char)((rand() % 255) - 128), 0 };
+            int v = (rand() % 255) - 128;
+            char buf[2] = { (char)v, 0 };
             m_ToPost.append(buf);
-            sum += buf[0];
+            sum += v;
         }
+
+        // dmLogInfo("<!> POSTing to %s://%s%s content %s", m_URI.m_Scheme, m_URI.m_Location, m_URI.m_Path, string_to_hex(m_ToPost).c_str());
 
         dmHttpClient::Result r;
         m_Content = "";
         m_StatusCode = -1;
         r = dmHttpClient::Post(m_Client, "/post");
+        dmLogInfo("<!> HTTP result is %d, expected sum %d => got %d", r, sum, atoi(m_Content.c_str()));
         ASSERT_EQ(dmHttpClient::RESULT_OK, r);
         ASSERT_EQ(200, m_StatusCode);
         ASSERT_EQ(sum, atoi(m_Content.c_str()));
@@ -813,9 +844,10 @@ TEST_P(dmHttpClientTest, PostLarge)
         m_ToPost = "";
 
         for (int j = 0; j < n; ++j) {
-            char buf[2] = { (char)((rand() % 255) - 128), 0 };
+            int v = (rand() % 255) - 128;
+            char buf[2] = { (char)v, 0 };
             m_ToPost.append(buf);
-            sum += buf[0];
+            sum += v;
         }
 
         dmHttpClient::Result r;
